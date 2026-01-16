@@ -6,3 +6,13 @@ app/__pycache__/
 app/dev.db
 app/routers/__pycache__/
 env.example
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.db
+dev.db
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

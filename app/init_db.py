@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
-from app.database import SessionLocal, engine
+
 from app import models
+from app.database import SessionLocal, engine
 
 
 def init_db():
@@ -14,19 +15,19 @@ def init_db():
                 title="The Pragmatic Programmer",
                 author="Andrew Hunt, David Thomas",
                 year=1999,
-                description="A classic book about software craftsmanship."
+                description="A classic book about software craftsmanship.",
             ),
             models.Book(
                 title="Clean Code",
                 author="Robert C. Martin",
                 year=2008,
-                description="A handbook of agile software craftsmanship."
+                description="A handbook of agile software craftsmanship.",
             ),
             models.Book(
                 title="Design Patterns: Elements of Reusable OO Software",
                 author="Gamma, Helm, Johnson, Vlissides",
                 year=1994,
-                description="The famous Gang of Four design patterns book."
+                description="The famous Gang of Four design patterns book.",
             ),
         ]
 
