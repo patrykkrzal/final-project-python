@@ -12,6 +12,18 @@ services:
       - sqlite_data:/app/data
     restart: unless-stopped
 
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+
 # Uncomment and configure the postgres service later (branch: feat/postgres-service)
 #  db:
 #    image: postgres:16-alpine
