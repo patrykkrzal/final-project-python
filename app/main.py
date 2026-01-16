@@ -2,16 +2,18 @@ from fastapi import FastAPI, Request
 from pathlib import Path
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from routers import books
-from database import Base, engine
+from app.routers import books
+from app.database import Base, engine
+import os
 
+# Create tables at startup (SQLite/Postgres will create if needed)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="LibraryLite")
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-static_dir = os.path.join(BASE_DIR, "static")
+static_dir = str(BASE_DIR / "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 app.include_router(books.router)
@@ -30,4 +32,5 @@ def home(request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    # when running directly, reference module path explicitly
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
