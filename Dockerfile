@@ -27,9 +27,11 @@ COPY --from=builder /install /usr/local
 # skopiuj kod aplikacji
 COPY app ./app
 
-# katalog na dane sqlite (wolumen)
-RUN mkdir -p /app/data \
-    && adduser --disabled-password --gecos "" appuser || true
+# katalog na dane sqlite (wolumen) i nadaj własność całego /app
+RUN adduser --disabled-password --gecos "" appuser || true \
+    && mkdir -p /app/data \
+    && chown -R appuser:appuser /app
+
 USER appuser
 
 EXPOSE 8000

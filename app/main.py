@@ -5,11 +5,14 @@ from fastapi.staticfiles import StaticFiles
 from app.routers import books
 from app.database import Base, engine
 import os
+from prometheus_fastapi_instrumentator import Instrumentator
 
 # Create tables at startup (SQLite/Postgres will create if needed)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="LibraryLite")
+Instrumentator().instrument(app).expose(app)
+
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
