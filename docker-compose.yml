@@ -5,11 +5,14 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: sqlite:///./data/dev.db
+      # Use Postgres database provided by service `db` below
+      DATABASE_URL: postgresql://postgres:example@db:5432/app
     ports:
       - "8000:8000"
     volumes:
       - sqlite_data:/app/data
+    depends_on:
+      - db
     restart: unless-stopped
 
   prometheus:
@@ -24,17 +27,16 @@ services:
     restart: unless-stopped
 
 
-# Uncomment and configure the postgres service later (branch: feat/postgres-service)
-#  db:
-#    image: postgres:16-alpine
-#    environment:
-#      POSTGRES_USER: postgres
-#      POSTGRES_PASSWORD: example
-#      POSTGRES_DB: app
-#    volumes:
-#      - pgdata:/var/lib/postgresql/data
-#    restart: unless-stopped
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: app
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
 
 volumes:
   sqlite_data:
-#  pgdata:
+  pgdata:
