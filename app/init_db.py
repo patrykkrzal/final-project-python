@@ -1,6 +1,7 @@
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import OperationalError
 import time
+
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
 from app import models
 from app.database import SessionLocal, engine

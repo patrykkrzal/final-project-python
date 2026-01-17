@@ -36,9 +36,9 @@ USER appuser
 
 EXPOSE 8000
 
-# domyślna zmienna (można nadpisać w docker-compose)
+
 ENV DATABASE_URL=sqlite:///./data/dev.db
 
-# uruchomienie uvicorn jako moduł (bez reload w obrazie produkcyjnym)
+
 CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
