@@ -53,4 +53,8 @@ async def register(payload: RegisterRequest):
     # extra simple rule: email must contain '@' (redundant to EmailStr, but explicit per request)
     if "@" not in payload.email:
         raise HTTPException(status_code=400, detail="Email must contain '@'")
-    return RegisterResponse(message="Registered (demo, not persisted)", username=payload.username, email=payload.email)
+    return RegisterResponse(
+        message="Registered (demo, not persisted)",
+        username=payload.username,
+        email=payload.email,
+    )
