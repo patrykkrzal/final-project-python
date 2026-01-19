@@ -1,11 +1,10 @@
 from datetime import datetime, timedelta
-from typing import Optional
+import os
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-import os
 
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "abc7d9f2e4k1m3n5p7q9r2s4t6v8w0x2z4")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
@@ -26,7 +25,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -38,7 +37,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
-def verify_token(token: str) -> Optional[str]:
+def verify_token(token: str) -> str | None:
     try:
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
         username: str = payload.get("sub")
@@ -61,7 +60,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
     return username
 
 
-def authenticate_demo_user(username: str, password: str) -> Optional[str]:
+def authenticate_demo_user(username: str, password: str) -> str | None:
     if username != ADMIN_USERNAME:
         return None
 

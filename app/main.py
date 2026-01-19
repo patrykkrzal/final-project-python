@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.database import Base, engine
-from app.routers import books, auth
+from app.routers import auth, books
 
 # Create tables at startup (SQLite/Postgres will create if needed)
 Base.metadata.create_all(bind=engine)

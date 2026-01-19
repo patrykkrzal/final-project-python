@@ -4,10 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.auth import (
+    JWT_EXPIRE_MINUTES,
     authenticate_demo_user,
     create_access_token,
     get_current_user,
-    JWT_EXPIRE_MINUTES,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
