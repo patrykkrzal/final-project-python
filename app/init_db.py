@@ -1,10 +1,30 @@
+import time
+
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app import models
 from app.database import SessionLocal, engine
 
 
+def wait_for_db(retries: int = 10, delay: float = 1.0):
+    """Wait until the database is reachable (simple retry loop)."""
+    for attempt in range(1, retries + 1):
+        try:
+            conn = engine.connect()
+            conn.close()
+            return True
+        except OperationalError:
+            print(f"Database not ready, attempt {attempt}/{retries}...")
+            time.sleep(delay)
+    return False
+
+
 def init_db():
+    # wait for DB (useful when running in Docker and Postgres needs to start)
+    if not wait_for_db():
+        raise RuntimeError("Could not connect to the database after several attempts")
+
     models.Base.metadata.create_all(bind=engine)
 
     db: Session = SessionLocal()

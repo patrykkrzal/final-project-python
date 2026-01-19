@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -6,12 +7,21 @@ from fastapi.templating import Jinja2Templates
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.database import Base, engine
-from app.routers import books
+from app.routers import auth, books
 
 # Create tables at startup (SQLite/Postgres will create if needed)
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="LibraryLite")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from app.init_db import init_db
+
+    init_db()
+    yield
+
+
+app = FastAPI(title="LibraryLite", lifespan=lifespan)
 Instrumentator().instrument(app).expose(app)
 
 
@@ -20,19 +30,13 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 static_dir = str(BASE_DIR / "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
+app.include_router(auth.router)
 app.include_router(books.router)
 
 
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
-
-
-@app.on_event("startup")
-async def startup_event():
-    from app.init_db import init_db
-
-    init_db()
 
 
 @app.get("/")
