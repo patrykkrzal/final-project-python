@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -11,7 +12,18 @@ from app.routers import books
 # Create tables at startup (SQLite/Postgres will create if needed)
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="LibraryLite")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    from app.init_db import init_db
+
+    init_db()
+    yield
+    # Shutdown (if needed in the future)
+
+
+app = FastAPI(title="LibraryLite", lifespan=lifespan)
 Instrumentator().instrument(app).expose(app)
 
 
@@ -26,13 +38,6 @@ app.include_router(books.router)
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
-
-
-@app.on_event("startup")
-async def startup_event():
-    from app.init_db import init_db
-
-    init_db()
 
 
 @app.get("/")
