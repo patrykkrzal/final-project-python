@@ -6,4 +6,7 @@ jinja2
 python-dotenv
 prometheus-fastapi-instrumentator
 httpx
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
 
