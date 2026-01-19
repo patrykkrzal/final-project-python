@@ -5,11 +5,14 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: sqlite:///./data/dev.db
+      # Use Postgres database provided by service `db` below
+      DATABASE_URL: postgresql://postgres:example@db:5432/app
     ports:
       - "8000:8000"
     volumes:
       - sqlite_data:/app/data
+    depends_on:
+      - db
     restart: unless-stopped
 
   prometheus:
@@ -18,23 +21,44 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
     depends_on:
       - backend
     restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
 
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: "admin"
+      GF_SECURITY_ADMIN_PASSWORD: "admin"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
 
-# Uncomment and configure the postgres service later (branch: feat/postgres-service)
-#  db:
-#    image: postgres:16-alpine
-#    environment:
-#      POSTGRES_USER: postgres
-#      POSTGRES_PASSWORD: example
-#      POSTGRES_DB: app
-#    volumes:
-#      - pgdata:/var/lib/postgresql/data
-#    restart: unless-stopped
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: app
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
 
 volumes:
   sqlite_data:
-#  pgdata:
+  pgdata:
+  grafana_data:
+  prometheus_data:
