@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+  <h2>Dodaj książkę</h2>
+  <p>Wymagane zalogowanie. Uzupełnij dane i wyślij.</p>
+  <form id="add-book-form">
+    <label>Tytuł<input type="text" name="title" required /></label>
+    <label>Autor<input type="text" name="author" required /></label>
+    <label>Rok<input type="text" name="year" /></label>
+    <label>Opis<input type="text" name="description" /></label>
+    <button type="submit">Dodaj</button>
+  </form>
+  <pre id="add-result"></pre>
+</section>
+<script>
+  const form = document.getElementById('add-book-form');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      document.getElementById('add-result').textContent = 'Musisz być zalogowany.';
+      return;
+    }
+    const payload = {
+      title: form.title.value,
+      author: form.author.value,
+      year: form.year.value ? parseInt(form.year.value, 10) : null,
+      description: form.description.value || null
+    };
+    try {
+      const res = await fetch('/books', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      document.getElementById('add-result').textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+      document.getElementById('add-result').textContent = 'Error: ' + err;
+    }
+  });
+</script>
+{% endblock %}

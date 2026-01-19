@@ -30,9 +30,6 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 static_dir = str(BASE_DIR / "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-app.include_router(auth.router)
-app.include_router(books.router)
-
 
 @app.get("/health")
 def health_check():
@@ -42,6 +39,38 @@ def health_check():
 @app.get("/")
 def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+
+# added pages for auth
+@app.get("/login")
+def login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+
+@app.get("/register")
+def register_page(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
+
+
+# IMPORTANT: define /books/ui before including books router to avoid /books/{id} catching it
+@app.get("/books/ui")
+def books_ui_page(request: Request):
+    return templates.TemplateResponse("books_ui.html", {"request": request})
+
+
+@app.get("/books/add")
+def add_book_page(request: Request):
+    return templates.TemplateResponse("add_book.html", {"request": request})
+
+
+@app.get("/books/manage")
+def manage_books_page(request: Request):
+    return templates.TemplateResponse("manage_books.html", {"request": request})
+
+
+# include routers after specific pages
+app.include_router(auth.router)
+app.include_router(books.router)
 
 
 if __name__ == "__main__":

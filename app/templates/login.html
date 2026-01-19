@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Login</h2>
+<form id="login-form">
+  <label>
+    Username
+    <input type="text" name="username" required />
+  </label>
+  <label>
+    Password
+    <input type="password" name="password" required />
+  </label>
+  <button type="submit">Login</button>
+</form>
+
+<p id="login-status" style="margin-top:10px;"></p>
+<pre id="login-result"></pre>
+
+<script>
+  const form = document.getElementById('login-form');
+  const statusEl = document.getElementById('login-status');
+
+  function setStatus() {
+    const token = localStorage.getItem('access_token');
+    statusEl.textContent = token ? 'Zalogowano — token zapisany.' : 'Nie zalogowano.';
+  }
+  setStatus();
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    fd.append('scope', '');
+
+    try {
+      const res = await fetch('/auth/token', { method: 'POST', body: fd });
+      const data = await res.json();
+      document.getElementById('login-result').textContent = JSON.stringify(data, null, 2);
+      if (data.access_token) {
+        localStorage.setItem('access_token', data.access_token);
+        setStatus();
+        const meRes = await fetch('/auth/me', { headers: { 'Authorization': `Bearer ${data.access_token}` } });
+        const me = await meRes.json();
+        document.getElementById('login-result').textContent += '\n\n/me => ' + JSON.stringify(me, null, 2);
+      }
+    } catch (err) {
+      document.getElementById('login-result').textContent = 'Error: ' + err;
+    }
+  });
+</script>
+{% endblock %}

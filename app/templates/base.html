@@ -1,19 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
     <title>LibraryLite</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <header>
-        <h1>LibraryLite</h1>
-        <nav>
-            <a href="/">Home</a>
-            <a href="/books">Books (JSON)</a>
+    <header class="header">
+        <h1 class="logo">LibraryLite</h1>
+        <nav class="nav">
+            <a class="btn outline" href="/">Home</a>
+            <a class="btn outline" href="/books/ui">Książki</a>
+            <a id="nav-login" class="btn outline" href="/login">Login</a>
+            <a id="nav-register" class="btn outline" href="/register">Register</a>
         </nav>
     </header>
-    <main>
+    <main class="container">
         {% block content %}{% endblock %}
     </main>
+
+    <script>
+      (function() {
+        const token = localStorage.getItem('access_token');
+        const loginLink = document.getElementById('nav-login');
+        const registerLink = document.getElementById('nav-register');
+        if (token) {
+          // zamień Login na Logout
+          loginLink.textContent = 'Logout';
+          loginLink.href = '#';
+          loginLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            // wyloguj: usuń token i wróć na stronę główną
+            localStorage.removeItem('access_token');
+            // opcjonalnie usuń inne dane sesji
+            window.location.href = '/';
+          });
+          // ukryj Register po zalogowaniu
+          if (registerLink) {
+            registerLink.style.display = 'none';
+          }
+        } else {
+          // gdy nie zalogowany, Login prowadzi do /login i pokaż Register
+          if (registerLink) {
+            registerLink.style.display = '';
+          }
+        }
+      })();
+    </script>
 </body>
 </html>

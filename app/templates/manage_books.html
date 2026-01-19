@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+  <h2>Zarządzaj książkami</h2>
+  <p>Wybierz książkę po tytule i autorze, a następnie edytuj lub usuń. Wymagane zalogowanie.</p>
+  <div id="manage-root"></div>
+</section>
+<script>
+  async function initManage() {
+    const token = localStorage.getItem('access_token');
+    const root = document.getElementById('manage-root');
+    if (!token) {
+      root.innerHTML = '<p>Musisz być zalogowany, aby zarządzać książkami.</p>';
+      return;
+    }
+    root.innerHTML = '<p>Ładowanie listy książek...</p>';
+    try {
+      const res = await fetch('/books');
+      const books = await res.json();
+      if (!Array.isArray(books) || books.length === 0) {
+        root.innerHTML = '<p style="color:#cbd5e1;">Brak książek.</p>';
+        return;
+      }
+      // Buduj selektor
+      root.innerHTML = '';
+      const form = document.createElement('div');
+      form.style.maxWidth = '600px';
+      form.style.margin = '0 auto';
+
+      const label = document.createElement('label');
+      label.style.display = 'block';
+      label.style.marginBottom = '12px';
+      label.style.textAlign = 'left';
+      label.textContent = 'Wybierz książkę:';
+
+      const select = document.createElement('select');
+      select.style.width = '100%';
+      select.style.padding = '10px';
+      select.style.border = '1px solid #334155';
+      select.style.borderRadius = '8px';
+      select.style.background = '#0b1324';
+      select.style.color = '#e5e7eb';
+
+      books.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = String(b.id);
+        opt.textContent = `${b.title} — ${b.author}`;
+        select.appendChild(opt);
+      });
+
+      const actions = document.createElement('div');
+      actions.className = 'actions-bar';
+
+      const btnEdit = document.createElement('a');
+      btnEdit.className = 'btn outline sm';
+      btnEdit.href = '#';
+      btnEdit.textContent = 'Edytuj';
+      btnEdit.onclick = async (e) => {
+        e.preventDefault();
+        const id = select.value;
+        const current = books.find(b => String(b.id) === id);
+        if (!current) return;
+        const newTitle = prompt('Nowy tytuł:', current.title);
+        if (newTitle === null) return;
+        const newAuthor = prompt('Nowy autor:', current.author);
+        if (newAuthor === null) return;
+        const newYearStr = prompt('Nowy rok (puste = bez zmiany):', current.year ?? '');
+        const newDesc = prompt('Nowy opis (puste = bez zmiany):', current.description ?? '');
+        const update = {};
+        if (newTitle !== current.title) update.title = newTitle;
+        if (newAuthor !== current.author) update.author = newAuthor;
+        if (newYearStr !== null && newYearStr !== '') update.year = parseInt(newYearStr, 10);
+        if (newDesc !== null && newDesc !== '') update.description = newDesc;
+        if (Object.keys(update).length === 0) return;
+        try {
+          const resp = await fetch(`/books/${id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(update)
+          });
+          if (!resp.ok) {
+            const detail = await resp.json();
+            alert('Błąd edycji: ' + JSON.stringify(detail));
+            return;
+          }
+          const updated = await resp.json();
+          // zaktualizuj label w selektorze
+          const opt = Array.from(select.options).find(o => o.value === id);
+          if (opt) opt.textContent = `${updated.title} — ${updated.author}`;
+          // zaktualizuj obiekt w pamięci
+          Object.assign(current, updated);
+        } catch (err) {
+          alert('Błąd edycji: ' + err);
+        }
+      };
+
+      const btnDelete = document.createElement('a');
+      btnDelete.className = 'btn outline sm';
+      btnDelete.href = '#';
+      btnDelete.textContent = 'Usuń';
+      btnDelete.onclick = async (e) => {
+        e.preventDefault();
+        const id = select.value;
+        try {
+          const del = await fetch(`/books/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (del.status === 204) {
+            // usuń opcję z selektora i z tablicy
+            const idx = books.findIndex(b => String(b.id) === id);
+            if (idx >= 0) books.splice(idx, 1);
+            const optIdx = Array.from(select.options).findIndex(o => o.value === id);
+            if (optIdx >= 0) select.remove(optIdx);
+            if (select.options.length === 0) {
+              root.innerHTML = '<p style="color:#cbd5e1;">Brak książek.</p>';
+            }
+          } else {
+            const detail = await del.json();
+            alert('Błąd usuwania: ' + JSON.stringify(detail));
+          }
+        } catch (err) {
+          alert('Błąd usuwania: ' + err);
+        }
+      };
+
+      form.appendChild(label);
+      form.appendChild(select);
+      actions.appendChild(btnEdit);
+      actions.appendChild(btnDelete);
+      root.appendChild(form);
+      root.appendChild(actions);
+    } catch (err) {
+      root.innerHTML = '<p style="color:#b91c1c;">Błąd ładowania: ' + err + '</p>';
+    }
+  }
+  initManage();
+</script>
+{% endblock %}
