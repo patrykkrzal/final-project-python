@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section>
+  <h2 style="text-align:center; margin-bottom:16px;">Twoje książki</h2>
+  <div id="books-root"></div>
+</section>
+
+<script>
+  async function loadBooks() {
+    const root = document.getElementById('books-root');
+    root.innerHTML = '<p>Wczytywanie książek...</p>';
+    try {
+      const res = await fetch('/books');
+      const books = await res.json();
+      // Grupuj według autora
+      const groups = {};
+      books.forEach(b => {
+        const author = b.author || 'Nieznany autor';
+        if (!groups[author]) groups[author] = [];
+        groups[author].push(b);
+      });
+
+      // Renderuj
+      root.innerHTML = '';
+      Object.entries(groups).forEach(([author, items]) => {
+        const section = document.createElement('div');
+        section.className = 'group';
+        const header = document.createElement('h2');
+        header.textContent = author;
+        section.appendChild(header);
+
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+        items.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          const title = document.createElement('h3');
+          title.textContent = item.title;
+          const year = document.createElement('p');
+          year.textContent = item.year ? `Rok: ${item.year}` : 'Rok: —';
+          const desc = document.createElement('p');
+          desc.textContent = item.description || 'Brak opisu';
+          card.appendChild(title);
+          card.appendChild(year);
+          card.appendChild(desc);
+          grid.appendChild(card);
+        });
+        section.appendChild(grid);
+        root.appendChild(section);
+      });
+
+      if (books.length === 0) {
+        root.innerHTML = '<p style="text-align:center;color:#6b7280;">Brak książek w kolekcji.</p>';
+      }
+    } catch (err) {
+      root.innerHTML = '<p style="color:#b91c1c;">Błąd ładowania książek: ' + err + '</p>';
+    }
+  }
+
+  loadBooks();
+</script>
+{% endblock %}
