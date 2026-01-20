@@ -5,8 +5,10 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from prometheus_fastapi_instrumentator import Instrumentator
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
-from app.database import Base, engine
+from app.database import SessionLocal, Base, engine
 from app.routers import auth, books
 
 # Create tables at startup (SQLite/Postgres will create if needed)
@@ -66,6 +68,30 @@ def add_book_page(request: Request):
 @app.get("/books/manage")
 def manage_books_page(request: Request):
     return templates.TemplateResponse("manage_books.html", {"request": request})
+
+
+@app.get("/db-check")
+def db_check():
+    try:
+        with SessionLocal() as db:
+            db.execute(text("SELECT 1"))
+        return {"db": "ok"}
+    except Exception as e:
+        return {"db": "error", "detail": str(e)}
+
+
+@app.post("/db-init")
+def db_init():
+    try:
+        # create tables
+        Base.metadata.create_all(bind=engine)
+        # seed data via existing init_db
+        from app.init_db import init_db
+
+        init_db()
+        return {"status": "initialized"}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
 
 
 # include routers after specific pages
