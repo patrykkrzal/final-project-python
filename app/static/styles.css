@@ -44,8 +44,15 @@ a { color: #93c5fd; }
 .group { margin: 0 auto 24px; max-width: 920px; }
 .group h2 { font-size: 20px; margin-bottom: 12px; color: #e2e8f0; text-align: center; }
 
-/* Grid behavior within group: center the grid block, but keep items ordered left->right */
-.group .grid { justify-content: center; justify-items: center; }
+/* Zmienione: użyj flexboxu w grupie, aby blok kart był wyśrodkowany, a elementy układały się od lewej do prawej */
+.group .grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start; /* elementy układają się od lewej wewnątrz bloku */
+  gap: 16px;
+  max-width: 760px; /* ogranicza szerokość bloku kart, dzięki czemu zaczynają się bardziej na środku */
+  margin: 0 auto; /* centruje blok */
+}
 
 /* Forms */
 form { max-width: 480px; margin: 0 auto; text-align: center; }
