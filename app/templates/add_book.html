@@ -9,17 +9,18 @@
     <label>Autor<input type="text" name="author" required /></label>
     <label>Rok<input type="text" name="year" /></label>
     <label>Opis<input type="text" name="description" /></label>
-    <button type="submit">Dodaj</button>
+    <button type="submit" class="btn secondary">Dodaj</button>
   </form>
-  <pre id="add-result"></pre>
+  <div id="add-result" style="margin-top:12px;color:#cbd5e1;text-align:center;"></div>
 </section>
 <script>
   const form = document.getElementById('add-book-form');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('access_token');
+    const out = document.getElementById('add-result');
     if (!token) {
-      document.getElementById('add-result').textContent = 'Musisz być zalogowany.';
+      out.textContent = 'Musisz być zalogowany.';
       return;
     }
     const payload = {
@@ -29,7 +30,7 @@
       description: form.description.value || null
     };
     try {
-      const res = await fetch('/books', {
+      const res = await fetch('/books/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,10 +38,16 @@
         },
         body: JSON.stringify(payload)
       });
+      if (!res.ok) {
+        const err = await res.json();
+        out.textContent = 'Błąd: ' + JSON.stringify(err);
+        return;
+      }
       const data = await res.json();
-      document.getElementById('add-result').textContent = JSON.stringify(data, null, 2);
+      out.textContent = 'Dodano: ' + (data.title || JSON.stringify(data));
+      form.reset();
     } catch (err) {
-      document.getElementById('add-result').textContent = 'Error: ' + err;
+      out.textContent = 'Error: ' + err;
     }
   });
 </script>

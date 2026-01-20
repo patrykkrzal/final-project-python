@@ -5,7 +5,8 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql://postgres:tyxwJCKJLcMKfGIBiZdcYyVSgrHLTAnX@postgres.railway.internal:5432/railway
+      # Use Postgres database provided by service `db` below
+      DATABASE_URL: DATABASE_URL=postgresql://postgres:tyxwJCKJLcMKfGIBiZdcYyVSgrHLTAnX@postgres.railway.internal:5432/railway
     ports:
       - "8000:8000"
     volumes:
