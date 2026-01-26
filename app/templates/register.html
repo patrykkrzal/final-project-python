@@ -9,12 +9,12 @@
     <input type="text" name="username" required />
   </label>
   <label>
-    Password
-    <input type="password" name="password" required minlength="8" />
-  </label>
-  <label>
     Email
     <input type="email" name="email" required />
+  </label>
+  <label>
+    Password
+    <input type="password" name="password" required minlength="8" />
   </label>
   <button type="submit">Register</button>
 </form>
@@ -33,8 +33,8 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = form.username.value;
-    const password = form.password.value;
     const email = form.email.value;
+    const password = form.password.value;
 
     if (!password || password.length < 8) {
       showMessage('Hasło jest za krótkie — minimum 8 znaków.', 'error');

@@ -55,9 +55,9 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
-    """Issue access token for valid credentials (DB-first, demo fallback)."""
-    # Try DB-backed authentication first
-    user_in_db = db.query(User).filter(User.username == form_data.username).first()
+    """Issue access token for valid credentials (DB-first by email, demo fallback)."""
+    # Try DB-backed authentication first - search by email (form_data.username contains email)
+    user_in_db = db.query(User).filter(User.email == form_data.username).first()
     print(f"[AUTH] Login attempt for '{form_data.username}': found_in_db={bool(user_in_db)}")
     if user_in_db:
         ok = verify_password(form_data.password, user_in_db.hashed_password)
