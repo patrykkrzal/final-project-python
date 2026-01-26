@@ -154,9 +154,7 @@ class TestAuthEdgeCases:
 
         from app.auth import create_access_token, verify_token
 
-        token = create_access_token(
-            data={"sub": "testuser"}, expires_delta=timedelta(minutes=10)
-        )
+        token = create_access_token(data={"sub": "testuser"}, expires_delta=timedelta(minutes=10))
         username = verify_token(token)
         assert username == "testuser"
 

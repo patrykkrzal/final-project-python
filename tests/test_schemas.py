@@ -39,9 +39,7 @@ class TestBookSchemas:
 
 class TestUserSchemas:
     def test_user_create_valid(self):
-        user = UserCreate(
-            username="testuser", email="test@example.com", password="password123"
-        )
+        user = UserCreate(username="testuser", email="test@example.com", password="password123")
         assert user.username == "testuser"
         assert user.email == "test@example.com"
 
