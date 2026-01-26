@@ -61,27 +61,93 @@
       const actions = document.createElement('div');
       actions.className = 'actions-bar';
 
+      // Create inline edit form (title, author, year, description)
+      const editForm = document.createElement('form');
+      editForm.style.marginTop = '16px';
+      editForm.style.display = 'none';
+
+      const inputTitle = document.createElement('input');
+      inputTitle.type = 'text';
+      inputTitle.name = 'title';
+      inputTitle.placeholder = 'Tytuł';
+      inputTitle.style.display = 'block';
+      inputTitle.style.width = '100%';
+      inputTitle.style.marginBottom = '8px';
+
+      const inputAuthor = document.createElement('input');
+      inputAuthor.type = 'text';
+      inputAuthor.name = 'author';
+      inputAuthor.placeholder = 'Autor';
+      inputAuthor.style.display = 'block';
+      inputAuthor.style.width = '100%';
+      inputAuthor.style.marginBottom = '8px';
+
+      const inputYear = document.createElement('input');
+      inputYear.type = 'number';
+      inputYear.name = 'year';
+      inputYear.placeholder = 'Rok';
+      inputYear.style.display = 'block';
+      inputYear.style.width = '100%';
+      inputYear.style.marginBottom = '8px';
+
+      const inputDesc = document.createElement('textarea');
+      inputDesc.name = 'description';
+      inputDesc.placeholder = 'Opis';
+      inputDesc.style.display = 'block';
+      inputDesc.style.width = '100%';
+      inputDesc.style.marginBottom = '8px';
+
+      const btnSave = document.createElement('button');
+      btnSave.className = 'btn sm';
+      btnSave.type = 'submit';
+      btnSave.textContent = 'Zapisz zmiany';
+
+      const btnCancel = document.createElement('button');
+      btnCancel.className = 'btn outline sm';
+      btnCancel.type = 'button';
+      btnCancel.textContent = 'Anuluj';
+      btnCancel.style.marginLeft = '8px';
+
+      editForm.appendChild(inputTitle);
+      editForm.appendChild(inputAuthor);
+      editForm.appendChild(inputYear);
+      editForm.appendChild(inputDesc);
+      editForm.appendChild(btnSave);
+      editForm.appendChild(btnCancel);
+
       const btnEdit = document.createElement('a');
       btnEdit.className = 'btn outline sm';
       btnEdit.href = '#';
       btnEdit.textContent = 'Edytuj';
-      btnEdit.onclick = async (e) => {
+      btnEdit.onclick = (e) => {
         e.preventDefault();
         const id = select.value;
         const current = books.find(b => String(b.id) === id);
         if (!current) return;
-        const newTitle = prompt('Nowy tytuł:', current.title);
-        if (newTitle === null) return;
-        const newAuthor = prompt('Nowy autor:', current.author);
-        if (newAuthor === null) return;
-        const newYearStr = prompt('Nowy rok (puste = bez zmiany):', current.year ?? '');
-        const newDesc = prompt('Nowy opis (puste = bez zmiany):', current.description ?? '');
+        // Populate form and show it
+        inputTitle.value = current.title || '';
+        inputAuthor.value = current.author || '';
+        inputYear.value = current.year ?? '';
+        inputDesc.value = current.description || '';
+        editForm.style.display = 'block';
+      };
+
+      // Save handler: submit PATCH to /books/{id}
+      editForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = select.value;
+        const current = books.find(b => String(b.id) === id);
+        if (!current) return;
         const update = {};
-        if (newTitle !== current.title) update.title = newTitle;
-        if (newAuthor !== current.author) update.author = newAuthor;
-        if (newYearStr !== null && newYearStr !== '') update.year = parseInt(newYearStr, 10);
-        if (newDesc !== null && newDesc !== '') update.description = newDesc;
-        if (Object.keys(update).length === 0) return;
+        if (inputTitle.value !== current.title) update.title = inputTitle.value;
+        if (inputAuthor.value !== current.author) update.author = inputAuthor.value;
+        if (inputYear.value !== '' && Number(inputYear.value) !== current.year) update.year = Number(inputYear.value);
+        if (inputDesc.value !== current.description) update.description = inputDesc.value;
+        if (Object.keys(update).length === 0) {
+          showMessage('Brak zmian do zapisania.');
+          editForm.style.display = 'none';
+          return;
+        }
         try {
           const resp = await fetch(`/books/${id}`, {
             method: 'PATCH',
@@ -101,9 +167,15 @@
           if (opt) opt.textContent = `${updated.title} — ${updated.author}`;
           Object.assign(current, updated);
           showMessage(`Książka "${updated.title}" została zaktualizowana!`);
+          editForm.style.display = 'none';
         } catch (err) {
           showMessage('Błąd edycji: ' + err, 'error');
         }
+      });
+
+      btnCancel.onclick = (e) => {
+        e.preventDefault();
+        editForm.style.display = 'none';
       };
 
       const btnDelete = document.createElement('a');
@@ -147,6 +219,7 @@
       actions.appendChild(btnDelete);
       root.appendChild(form);
       root.appendChild(actions);
+      root.appendChild(editForm);
     } catch (err) {
       root.innerHTML = '<p style="color:#b91c1c;">Błąd ładowania: ' + err + '</p>';
     }
