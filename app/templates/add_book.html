@@ -36,7 +36,7 @@
       description: form.description.value || null
     };
     try {
-      const res = await fetch('/books', {
+      const res = await fetch('/books/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

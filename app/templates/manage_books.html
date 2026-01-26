@@ -26,7 +26,7 @@
     }
     root.innerHTML = '<p>Ładowanie listy książek...</p>';
     try {
-      const res = await fetch('/books');
+      const res = await fetch('/books/');
       const books = await res.json();
       if (!Array.isArray(books) || books.length === 0) {
         root.innerHTML = '<p style="color:#cbd5e1;">Brak książek.</p>';
