@@ -37,7 +37,7 @@ def hash_password(password: str) -> str:
     try:
         return pwd_context.hash(safe)
     except Exception as e:
-        raise HTTPException(status_code=422, detail=f"Password hashing failed: {str(e)}")
+        raise HTTPException(status_code=422, detail=f"Password hashing failed: {str(e)}") from e
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:

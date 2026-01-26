@@ -3,7 +3,7 @@ Pydantic schemas for Books and Users.
 Behavior unchanged; added docstrings and minor comments to improve clarity.
 """
 
-from pydantic import BaseModel, ConfigDict, field_validator, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 
 class BookBase(BaseModel):
