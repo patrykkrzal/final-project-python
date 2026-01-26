@@ -1,9 +1,15 @@
+"""
+SQLAlchemy models for the application.
+Behavior unchanged; comments/docstrings added for clarity.
+"""
+
 from sqlalchemy import Column, Integer, String, UniqueConstraint
 
 from .database import Base
 
 
 class Book(Base):
+    """Book entity stored in the 'books' table."""
     __tablename__ = "books"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -14,6 +20,7 @@ class Book(Base):
 
 
 class User(Base):
+    """User entity for authentication (no plain passwords stored)."""
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)

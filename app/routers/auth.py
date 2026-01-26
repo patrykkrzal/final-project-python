@@ -1,3 +1,8 @@
+"""
+Auth router: registration and login endpoints backed by DB.
+Behavior unchanged; added docstrings/comments for clarity and maintainability.
+"""
+
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -21,18 +26,23 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 class RegisterRequest(BaseModel):
+    """Legacy shape kept for compatibility with earlier demo (unused now)."""
+
     username: str
     password: str
-    email: EmailStr  # ensures valid email format
+    email: EmailStr
 
 
 class RegisterResponse(BaseModel):
+    """Response returned by register endpoint (without sensitive fields)."""
+
     message: str
     username: str
     email: EmailStr
 
 
 def get_db():
+    """Provide DB session via dependency injection."""
     db = SessionLocal()
     try:
         yield db
@@ -41,7 +51,11 @@ def get_db():
 
 
 @router.post("/token", response_model=TokenResponse)
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
+    """Issue access token for valid credentials (DB-first, demo fallback)."""
     # Try DB-backed authentication first
     user_in_db = db.query(User).filter(User.username == form_data.username).first()
     print(f"[AUTH] Login attempt for '{form_data.username}': found_in_db={bool(user_in_db)}")
@@ -50,7 +64,10 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
         print(f"[AUTH] Password verify for '{form_data.username}': {ok}")
         if ok:
             access_token_expires = timedelta(minutes=JWT_EXPIRE_MINUTES)
-            access_token = create_access_token(data={"sub": user_in_db.username}, expires_delta=access_token_expires)
+            access_token = create_access_token(
+                data={"sub": user_in_db.username},
+                expires_delta=access_token_expires,
+            )
             return TokenResponse(access_token=access_token)
 
     # Fallback to demo admin (to keep existing tests passing)
@@ -71,11 +88,13 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
 
 @router.get("/me")
 async def read_current_user(current_user: str = Depends(get_current_user)):
+    """Return username extracted from the provided Bearer token."""
     return {"username": current_user}
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=201)
 async def register(payload: UserCreate, db: Session = Depends(get_db)):
+    """Create a new user with hashed password and unique username/email."""
     # Uniqueness checks
     if db.query(User).filter(User.username == payload.username).first():
         raise HTTPException(status_code=400, detail="Username already exists")
@@ -102,5 +121,6 @@ async def register(payload: UserCreate, db: Session = Depends(get_db)):
 
 @router.get("/debug/users")
 async def list_users(db: Session = Depends(get_db)):
+    """Diagnostic: list users (id, username, email). Do not expose publicly in prod."""
     users = db.query(User).all()
     return [{"id": u.id, "username": u.username, "email": u.email} for u in users]

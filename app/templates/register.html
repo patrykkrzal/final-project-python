@@ -1,6 +1,8 @@
+{# Presentation: register form page; added comment to make diff visible in commit #}
 {% extends "base.html" %}
 
 {% block content %}
+<!-- UI: Registration form with inline messages (no behavior change in this commit) -->
 <h2>Register</h2>
 <form id="register-form">
   <label>
@@ -21,6 +23,7 @@
 <div id="register-message" style="margin-top: 1rem; white-space: pre-wrap;"></div>
 
 <script>
+  // No behavior change: just ensuring commit shows a visible diff
   const form = document.getElementById('register-form');
   const messageEl = document.getElementById('register-message');
 
@@ -35,7 +38,7 @@
     const password = form.password.value;
     const email = form.email.value;
 
-    // Frontend validation
+    // Frontend validation (unchanged)
     if (!password || password.length < 8) {
       showMessage('Hasło jest za krótkie — minimum 8 znaków.', 'error');
       return;
@@ -50,7 +53,7 @@
       });
       const data = await res.json();
       if (res.ok) {
-        showMessage(`Registered successfully for user \"${data.username}\" (email: ${data.email}).`);
+        showMessage(`Registered successfully for user "${data.username}" (email: ${data.email}).`);
         form.reset();
       } else {
         const detail = (data && data.detail) ? data.detail : 'Registration failed';

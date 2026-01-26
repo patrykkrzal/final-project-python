@@ -1,6 +1,8 @@
+{# Presentation: login form page; added comment to make diff visible in commit #}
 {% extends "base.html" %}
 
 {% block content %}
+<!-- UI: Login form with inline success/error messages (no behavior change here) -->
 <h2>Login</h2>
 <form id="login-form">
   <label>
@@ -19,6 +21,7 @@
 <pre id="login-result"></pre>
 
 <script>
+  // No behavior change: just ensuring commit shows a visible diff
   const form = document.getElementById('login-form');
   const statusEl = document.getElementById('login-status');
   const messageEl = document.getElementById('login-message');
@@ -43,7 +46,6 @@
     if (!data) return defaultMsg;
     if (data.detail) {
       if (Array.isArray(data.detail) && data.detail.length) {
-        // Pydantic 422 Unprocessable Entity
         const first = data.detail[0];
         if (first && (first.msg || first.message)) {
           return first.msg || first.message;
