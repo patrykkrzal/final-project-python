@@ -17,11 +17,7 @@ DATABASE_URL = settings.DATABASE_URL or os.getenv("DATABASE_URL", "sqlite:///./d
 REQUIRE_SSL = os.getenv("DATABASE_REQUIRE_SSL", "false").lower() == "true"
 
 # If using Postgres and SSL is explicitly required but not present, append sslmode=require
-if (
-    REQUIRE_SSL
-    and DATABASE_URL.startswith("postgresql")
-    and "sslmode" not in DATABASE_URL
-):
+if REQUIRE_SSL and DATABASE_URL.startswith("postgresql") and "sslmode" not in DATABASE_URL:
     sep = "&" if "?" in DATABASE_URL else "?"
     DATABASE_URL = f"{DATABASE_URL}{sep}sslmode=require"
 

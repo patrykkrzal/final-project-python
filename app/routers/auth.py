@@ -73,8 +73,7 @@ async def login(
     # Fallback to demo admin (to keep existing tests passing)
     user = authenticate_demo_user(form_data.username, form_data.password)
     print(
-        f"[AUTH] Fallback demo auth for '{form_data.username}': "
-        f"{'success' if user else 'failed'}"
+        f"[AUTH] Fallback demo auth for '{form_data.username}': {'success' if user else 'failed'}"
     )
     if not user:
         raise HTTPException(

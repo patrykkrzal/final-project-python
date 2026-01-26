@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 class BookBase(BaseModel):
     """Common fields shared by Book variants."""
+
     title: str
     author: str
     description: str | None = None
@@ -57,6 +58,7 @@ class BookUpdate(BaseModel):
 
 class Book(BookBase):
     """Response schema for a stored book (includes id)."""
+
     id: int
 
     model_config = ConfigDict(from_attributes=True)
@@ -65,12 +67,14 @@ class Book(BookBase):
 # --- User schemas ---
 class UserBase(BaseModel):
     """Fields common to all user representations (excluding password)."""
+
     username: str
     email: EmailStr
 
 
 class UserCreate(UserBase):
     """Payload for registering a new user (includes password)."""
+
     password: str
 
     @field_validator("username")
@@ -90,11 +94,13 @@ class UserCreate(UserBase):
 
 class UserRead(UserBase):
     """Response schema for a stored user (no password)."""
+
     id: int
     model_config = ConfigDict(from_attributes=True)
 
 
 class TokenResponse(BaseModel):
     """OAuth2 password grant token response returned by /auth/token."""
+
     access_token: str
     token_type: str = "bearer"
