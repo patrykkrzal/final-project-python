@@ -17,12 +17,28 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
+def _truncate_bcrypt_limit(password: str) -> str:
+    # bcrypt ma limit ~72 bajtów; przytnijmy bezpiecznie (UTF-8)
+    b = password.encode("utf-8")
+    if len(b) > 72:
+        b = b[:72]
+    return b.decode("utf-8", errors="ignore")
+
+
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    safe = _truncate_bcrypt_limit(password)
+    try:
+        return pwd_context.hash(safe)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"Password hashing failed: {str(e)}")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    safe = _truncate_bcrypt_limit(plain_password)
+    try:
+        return pwd_context.verify(safe, hashed_password)
+    except Exception:
+        return False
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:

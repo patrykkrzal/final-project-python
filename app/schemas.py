@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, EmailStr
 
 
 class BookBase(BaseModel):
@@ -49,3 +49,37 @@ class Book(BookBase):
     id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# User schemas
+class UserBase(BaseModel):
+    username: str
+    email: EmailStr
+
+
+class UserCreate(UserBase):
+    password: str
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("username cannot be empty")
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if not v or len(v) < 8:
+            raise ValueError("password must be at least 8 characters long")
+        return v
+
+
+class UserRead(UserBase):
+    id: int
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
