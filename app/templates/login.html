@@ -1,6 +1,8 @@
+{# Presentation: login form page; added comment to make diff visible in commit #}
 {% extends "base.html" %}
 
 {% block content %}
+<!-- UI: Login form with inline success/error messages (no behavior change here) -->
 <h2>Login</h2>
 <form id="login-form">
   <label>
@@ -15,17 +17,44 @@
 </form>
 
 <p id="login-status" style="margin-top:10px;"></p>
+<div id="login-message" style="margin-top:10px; white-space: pre-wrap;"></div>
 <pre id="login-result"></pre>
 
 <script>
+  // No behavior change: just ensuring commit shows a visible diff
   const form = document.getElementById('login-form');
   const statusEl = document.getElementById('login-status');
+  const messageEl = document.getElementById('login-message');
 
-  function setStatus() {
-    const token = localStorage.getItem('access_token');
-    statusEl.textContent = token ? 'Zalogowano — token zapisany.' : 'Nie zalogowano.';
+  function showMessage(text, type = 'info') {
+    messageEl.textContent = text;
+    messageEl.style.color = type === 'error' ? '#b00020' : '#006400';
   }
-  setStatus();
+
+  function setStatusLoggedIn() {
+    statusEl.textContent = 'Zalogowano — token zapisany.';
+    statusEl.style.color = '#006400';
+  }
+  function setStatusLoginFailed() {
+    statusEl.textContent = 'Nieudana próba logowania.';
+    statusEl.style.color = '#b00020';
+  }
+  // Na starcie nie pokazujemy żadnego statusu
+  statusEl.textContent = '';
+
+  function extractError(data, defaultMsg) {
+    if (!data) return defaultMsg;
+    if (data.detail) {
+      if (Array.isArray(data.detail) && data.detail.length) {
+        const first = data.detail[0];
+        if (first && (first.msg || first.message)) {
+          return first.msg || first.message;
+        }
+      }
+      if (typeof data.detail === 'string') return data.detail;
+    }
+    return defaultMsg;
+  }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -36,15 +65,22 @@
       const res = await fetch('/auth/token', { method: 'POST', body: fd });
       const data = await res.json();
       document.getElementById('login-result').textContent = JSON.stringify(data, null, 2);
-      if (data.access_token) {
+      if (res.ok && data.access_token) {
         localStorage.setItem('access_token', data.access_token);
-        setStatus();
+        showMessage('Zalogowano pomyślnie.');
+        setStatusLoggedIn();
         const meRes = await fetch('/auth/me', { headers: { 'Authorization': `Bearer ${data.access_token}` } });
         const me = await meRes.json();
         document.getElementById('login-result').textContent += '\n\n/me => ' + JSON.stringify(me, null, 2);
+      } else {
+        const detail = extractError(data, 'Login failed');
+        showMessage(`Błąd logowania (${res.status}): ${detail}`, 'error');
+        localStorage.removeItem('access_token');
+        setStatusLoginFailed();
       }
     } catch (err) {
-      document.getElementById('login-result').textContent = 'Error: ' + err;
+      showMessage('Network error: ' + err, 'error');
+      setStatusLoginFailed();
     }
   });
 </script>

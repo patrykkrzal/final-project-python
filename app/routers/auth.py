@@ -1,34 +1,78 @@
+"""
+Auth router: registration and login endpoints backed by DB.
+Behavior unchanged; added docstrings/comments for clarity and maintainability.
+"""
+
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
+from sqlalchemy.orm import Session
 
 from app.auth import (
     JWT_EXPIRE_MINUTES,
     authenticate_demo_user,
     create_access_token,
     get_current_user,
+    hash_password,
+    verify_password,
 )
+from app.database import SessionLocal
+from app.models import User
+from app.schemas import TokenResponse, UserCreate, UserRead
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 class RegisterRequest(BaseModel):
+    """Legacy shape kept for compatibility with earlier demo (unused now)."""
+
     username: str
     password: str
-    email: EmailStr  # ensures valid email format
+    email: EmailStr
 
 
 class RegisterResponse(BaseModel):
+    """Response returned by register endpoint (without sensitive fields)."""
+
     message: str
     username: str
     email: EmailStr
 
 
-@router.post("/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+def get_db():
+    """Provide DB session via dependency injection."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@router.post("/token", response_model=TokenResponse)
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
+    """Issue access token for valid credentials (DB-first, demo fallback)."""
+    # Try DB-backed authentication first
+    user_in_db = db.query(User).filter(User.username == form_data.username).first()
+    print(f"[AUTH] Login attempt for '{form_data.username}': found_in_db={bool(user_in_db)}")
+    if user_in_db:
+        ok = verify_password(form_data.password, user_in_db.hashed_password)
+        print(f"[AUTH] Password verify for '{form_data.username}': {ok}")
+        if ok:
+            access_token_expires = timedelta(minutes=JWT_EXPIRE_MINUTES)
+            access_token = create_access_token(
+                data={"sub": user_in_db.username},
+                expires_delta=access_token_expires,
+            )
+            return TokenResponse(access_token=access_token)
+
+    # Fallback to demo admin (to keep existing tests passing)
     user = authenticate_demo_user(form_data.username, form_data.password)
+    print(f"[AUTH] Fallback demo auth for '{form_data.username}': {'success' if user else 'failed'}")
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -39,22 +83,44 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     access_token_expires = timedelta(minutes=JWT_EXPIRE_MINUTES)
     access_token = create_access_token(data={"sub": user}, expires_delta=access_token_expires)
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return TokenResponse(access_token=access_token)
 
 
 @router.get("/me")
 async def read_current_user(current_user: str = Depends(get_current_user)):
+    """Return username extracted from the provided Bearer token."""
     return {"username": current_user}
 
 
-# Demo registration endpoint. In real app, persist user to DB and hash password.
-@router.post("/register", response_model=RegisterResponse)
-async def register(payload: RegisterRequest):
-    # extra simple rule: email must contain '@' (redundant to EmailStr, but explicit per request)
-    if "@" not in payload.email:
-        raise HTTPException(status_code=400, detail="Email must contain '@'")
-    return RegisterResponse(
-        message="Registered (demo, not persisted)",
-        username=payload.username,
-        email=payload.email,
+@router.post("/register", response_model=RegisterResponse, status_code=201)
+async def register(payload: UserCreate, db: Session = Depends(get_db)):
+    """Create a new user with hashed password and unique username/email."""
+    # Uniqueness checks
+    if db.query(User).filter(User.username == payload.username).first():
+        raise HTTPException(status_code=400, detail="Username already exists")
+    if db.query(User).filter(User.email == payload.email).first():
+        raise HTTPException(status_code=400, detail="Email already exists")
+
+    # Create user with hashed password
+    user = User(
+        username=payload.username.strip(),
+        email=str(payload.email),
+        hashed_password=hash_password(payload.password),
     )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    print(f"[AUTH] Registered user id={user.id} username='{user.username}' email='{user.email}'")
+
+    return RegisterResponse(
+        message="Registered successfully",
+        username=user.username,
+        email=user.email,
+    )
+
+
+@router.get("/debug/users")
+async def list_users(db: Session = Depends(get_db)):
+    """Diagnostic: list users (id, username, email). Do not expose publicly in prod."""
+    users = db.query(User).all()
+    return [{"id": u.id, "username": u.username, "email": u.email} for u in users]

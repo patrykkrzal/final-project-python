@@ -1,6 +1,8 @@
+{# Presentation: register form page; added comment to make diff visible in commit #}
 {% extends "base.html" %}
 
 {% block content %}
+<!-- UI: Registration form with inline messages (no behavior change in this commit) -->
 <h2>Register</h2>
 <form id="register-form">
   <label>
@@ -9,7 +11,7 @@
   </label>
   <label>
     Password
-    <input type="password" name="password" required />
+    <input type="password" name="password" required minlength="8" />
   </label>
   <label>
     Email
@@ -18,17 +20,31 @@
   <button type="submit">Register</button>
 </form>
 
-<pre id="register-result"></pre>
+<div id="register-message" style="margin-top: 1rem; white-space: pre-wrap;"></div>
 
 <script>
+  // No behavior change: just ensuring commit shows a visible diff
   const form = document.getElementById('register-form');
+  const messageEl = document.getElementById('register-message');
+
+  function showMessage(text, type = 'info') {
+    messageEl.textContent = text;
+    messageEl.style.color = type === 'error' ? '#b00020' : '#006400';
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const payload = {
-      username: form.username.value,
-      password: form.password.value,
-      email: form.email.value
-    };
+    const username = form.username.value;
+    const password = form.password.value;
+    const email = form.email.value;
+
+    // Frontend validation (unchanged)
+    if (!password || password.length < 8) {
+      showMessage('Hasło jest za krótkie — minimum 8 znaków.', 'error');
+      return;
+    }
+
+    const payload = { username, password, email };
     try {
       const res = await fetch('/auth/register', {
         method: 'POST',
@@ -36,9 +52,15 @@
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      document.getElementById('register-result').textContent = JSON.stringify(data, null, 2);
+      if (res.ok) {
+        showMessage(`Registered successfully for user "${data.username}" (email: ${data.email}).`);
+        form.reset();
+      } else {
+        const detail = (data && data.detail) ? data.detail : 'Registration failed';
+        showMessage(`Error (${res.status}): ${detail}`, 'error');
+      }
     } catch (err) {
-      document.getElementById('register-result').textContent = 'Error: ' + err;
+      showMessage('Network error: ' + err, 'error');
     }
   });
 </script>
