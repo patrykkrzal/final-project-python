@@ -11,7 +11,7 @@
     const root = document.getElementById('books-root');
     root.innerHTML = '<p>Wczytywanie książek...</p>';
     try {
-      const res = await fetch('/books');
+      const res = await fetch('/books/');
       const books = await res.json();
       // Grupuj według autora
       const groups = {};
