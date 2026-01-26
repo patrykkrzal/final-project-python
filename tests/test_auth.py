@@ -1,3 +1,5 @@
+from datetime import UTC
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -124,11 +126,13 @@ class TestListBooksPublic:
 class TestAuthEdgeCases:
     def test_token_without_sub_claim(self):
         # Create token without 'sub' claim
-        from app.auth import JWT_SECRET_KEY, JWT_ALGORITHM
-        from jose import jwt
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
 
-        token_data = {"exp": datetime.now(timezone.utc) + timedelta(minutes=5)}
+        from jose import jwt
+
+        from app.auth import JWT_ALGORITHM, JWT_SECRET_KEY
+
+        token_data = {"exp": datetime.now(UTC) + timedelta(minutes=5)}
         bad_token = jwt.encode(token_data, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
         response = client.get(
@@ -146,8 +150,9 @@ class TestAuthEdgeCases:
 
     def test_create_token_with_custom_expiry(self):
         # Test create_access_token with custom expires_delta
-        from app.auth import create_access_token, verify_token
         from datetime import timedelta
+
+        from app.auth import create_access_token, verify_token
 
         token = create_access_token(
             data={"sub": "testuser"}, expires_delta=timedelta(minutes=10)

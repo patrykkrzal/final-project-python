@@ -4,7 +4,7 @@ Note: behavior unchanged; added docstrings and minor formatting for clarity.
 """
 
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -53,9 +53,9 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     """Create a signed JWT with an optional custom expiration delta."""
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
+        expire = datetime.now(UTC) + timedelta(minutes=JWT_EXPIRE_MINUTES)
 
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
