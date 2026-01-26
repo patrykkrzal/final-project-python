@@ -20,7 +20,7 @@ from app.auth import (
 )
 from app.database import SessionLocal
 from app.models import User
-from app.schemas import TokenResponse, UserCreate, UserRead
+from app.schemas import TokenResponse, UserCreate
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -72,7 +72,9 @@ async def login(
 
     # Fallback to demo admin (to keep existing tests passing)
     user = authenticate_demo_user(form_data.username, form_data.password)
-    print(f"[AUTH] Fallback demo auth for '{form_data.username}': {'success' if user else 'failed'}")
+    print(
+        f"[AUTH] Fallback demo auth for '{form_data.username}': {'success' if user else 'failed'}"
+    )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
