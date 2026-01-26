@@ -51,6 +51,30 @@ def test_create_book_minimal(auth_token):
     assert data["year"] is None
 
 
+def test_create_book_missing_title(auth_token):
+    """Test that creating a book without title returns 400"""
+    response = client.post(
+        "/books/",
+        json={
+            "author": "Test Author",
+        },
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 422  # Pydantic validation
+
+
+def test_create_book_missing_author(auth_token):
+    """Test that creating a book without author returns 400"""
+    response = client.post(
+        "/books/",
+        json={
+            "title": "Test Title",
+        },
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 422  # Pydantic validation
+
+
 def test_create_book_validation_empty_title(auth_token):
     """Test POST /books/ with empty title"""
     response = client.post(

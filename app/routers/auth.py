@@ -119,10 +119,3 @@ async def register(payload: UserCreate, db: Session = Depends(get_db)):
         username=user.username,
         email=user.email,
     )
-
-
-@router.get("/debug/users")
-async def list_users(db: Session = Depends(get_db)):
-    """Diagnostic: list users (id, username, email). Do not expose publicly in prod."""
-    users = db.query(User).all()
-    return [{"id": u.id, "username": u.username, "email": u.email} for u in users]
