@@ -4,9 +4,19 @@
 <section class="hero">
   <h2>Zarządzaj książkami</h2>
   <p>Wybierz książkę po tytule i autorze, a następnie edytuj lub usuń. Wymagane zalogowanie.</p>
+  <div id="manage-message" style="margin-top: 1rem; margin-bottom: 1rem; white-space: pre-wrap;"></div>
   <div id="manage-root"></div>
 </section>
 <script>
+  const messageEl = document.getElementById('manage-message');
+
+  function showMessage(text, type = 'info') {
+    messageEl.textContent = text;
+    messageEl.style.color = type === 'error' ? '#b00020' : '#006400';
+    // Ukryj komunikat po 5 sekundach
+    setTimeout(() => { messageEl.textContent = ''; }, 5000);
+  }
+
   async function initManage() {
     const token = localStorage.getItem('access_token');
     const root = document.getElementById('manage-root');
@@ -22,7 +32,6 @@
         root.innerHTML = '<p style="color:#cbd5e1;">Brak książek.</p>';
         return;
       }
-      // Buduj selektor
       root.innerHTML = '';
       const form = document.createElement('div');
       form.style.maxWidth = '600px';
@@ -84,17 +93,16 @@
           });
           if (!resp.ok) {
             const detail = await resp.json();
-            alert('Błąd edycji: ' + JSON.stringify(detail));
+            showMessage('Błąd edycji: ' + JSON.stringify(detail), 'error');
             return;
           }
           const updated = await resp.json();
-          // zaktualizuj label w selektorze
           const opt = Array.from(select.options).find(o => o.value === id);
           if (opt) opt.textContent = `${updated.title} — ${updated.author}`;
-          // zaktualizuj obiekt w pamięci
           Object.assign(current, updated);
+          showMessage(`Książka "${updated.title}" została zaktualizowana!`);
         } catch (err) {
-          alert('Błąd edycji: ' + err);
+          showMessage('Błąd edycji: ' + err, 'error');
         }
       };
 
@@ -105,26 +113,31 @@
       btnDelete.onclick = async (e) => {
         e.preventDefault();
         const id = select.value;
+        const current = books.find(b => String(b.id) === id);
+        const bookTitle = current ? current.title : 'książka';
+
+        if (!confirm(`Czy na pewno chcesz usunąć "${bookTitle}"?`)) return;
+
         try {
           const del = await fetch(`/books/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (del.status === 204) {
-            // usuń opcję z selektora i z tablicy
             const idx = books.findIndex(b => String(b.id) === id);
             if (idx >= 0) books.splice(idx, 1);
             const optIdx = Array.from(select.options).findIndex(o => o.value === id);
             if (optIdx >= 0) select.remove(optIdx);
+            showMessage(`Książka "${bookTitle}" została usunięta!`);
             if (select.options.length === 0) {
               root.innerHTML = '<p style="color:#cbd5e1;">Brak książek.</p>';
             }
           } else {
             const detail = await del.json();
-            alert('Błąd usuwania: ' + JSON.stringify(detail));
+            showMessage('Błąd usuwania: ' + JSON.stringify(detail), 'error');
           }
         } catch (err) {
-          alert('Błąd usuwania: ' + err);
+          showMessage('Błąd usuwania: ' + err, 'error');
         }
       };
 

@@ -11,15 +11,22 @@
     <label>Opis<input type="text" name="description" /></label>
     <button type="submit">Dodaj</button>
   </form>
-  <pre id="add-result"></pre>
+  <div id="add-message" style="margin-top: 1rem; white-space: pre-wrap;"></div>
 </section>
 <script>
   const form = document.getElementById('add-book-form');
+  const messageEl = document.getElementById('add-message');
+
+  function showMessage(text, type = 'info') {
+    messageEl.textContent = text;
+    messageEl.style.color = type === 'error' ? '#b00020' : '#006400';
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('access_token');
     if (!token) {
-      document.getElementById('add-result').textContent = 'Musisz być zalogowany.';
+      showMessage('Musisz być zalogowany, aby dodać książkę.', 'error');
       return;
     }
     const payload = {
@@ -38,9 +45,15 @@
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      document.getElementById('add-result').textContent = JSON.stringify(data, null, 2);
+      if (res.ok) {
+        showMessage(`Książka "${data.title}" została dodana pomyślnie!`);
+        form.reset();
+      } else {
+        const detail = (data && data.detail) ? data.detail : 'Nie udało się dodać książki';
+        showMessage(`Błąd (${res.status}): ${detail}`, 'error');
+      }
     } catch (err) {
-      document.getElementById('add-result').textContent = 'Error: ' + err;
+      showMessage('Błąd sieci: ' + err, 'error');
     }
   });
 </script>
