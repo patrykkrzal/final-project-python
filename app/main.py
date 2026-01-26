@@ -38,34 +38,34 @@ def health_check():
 
 @app.get("/")
 def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")
 
 
 # added pages for auth
 @app.get("/login")
 def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(request, "login.html")
 
 
 @app.get("/register")
 def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
+    return templates.TemplateResponse(request, "register.html")
 
 
 # IMPORTANT: define /books/ui before including books router to avoid /books/{id} catching it
 @app.get("/books/ui")
 def books_ui_page(request: Request):
-    return templates.TemplateResponse("books_ui.html", {"request": request})
+    return templates.TemplateResponse(request, "books_ui.html")
 
 
 @app.get("/books/add")
 def add_book_page(request: Request):
-    return templates.TemplateResponse("add_book.html", {"request": request})
+    return templates.TemplateResponse(request, "add_book.html")
 
 
 @app.get("/books/manage")
 def manage_books_page(request: Request):
-    return templates.TemplateResponse("manage_books.html", {"request": request})
+    return templates.TemplateResponse(request, "manage_books.html")
 
 
 # include routers after specific pages

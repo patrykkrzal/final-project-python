@@ -1,3 +1,5 @@
+from datetime import UTC
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -119,3 +121,48 @@ class TestListBooksPublic:
         response = client.get("/books/")
         assert response.status_code == 200
         assert isinstance(response.json(), list)
+
+
+class TestAuthEdgeCases:
+    def test_token_without_sub_claim(self):
+        # Create token without 'sub' claim
+        from datetime import datetime, timedelta
+
+        from jose import jwt
+
+        from app.auth import JWT_ALGORITHM, JWT_SECRET_KEY
+
+        token_data = {"exp": datetime.now(UTC) + timedelta(minutes=5)}
+        bad_token = jwt.encode(token_data, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+
+        response = client.get(
+            "/auth/me",
+            headers={"Authorization": f"Bearer {bad_token}"},
+        )
+        assert response.status_code == 401
+
+    def test_verify_password_exception_handling(self):
+        # Test verify_password with corrupted hash returns False
+        from app.auth import verify_password
+
+        result = verify_password("test", "corrupted_hash")
+        assert result is False
+
+    def test_create_token_with_custom_expiry(self):
+        # Test create_access_token with custom expires_delta
+        from datetime import timedelta
+
+        from app.auth import create_access_token, verify_token
+
+        token = create_access_token(data={"sub": "testuser"}, expires_delta=timedelta(minutes=10))
+        username = verify_token(token)
+        assert username == "testuser"
+
+    def test_long_password_truncation(self):
+        # Test password longer than 72 bytes (bcrypt limit)
+        long_password = "a" * 100
+        response = client.post(
+            "/auth/token",
+            data={"username": "admin", "password": long_password},
+        )
+        assert response.status_code == 401
