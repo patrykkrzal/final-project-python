@@ -1,4 +1,4 @@
-{# Presentation: login form page; added comment to make diff visible in commit #}
+{# Presentation: login form page #}
 {% extends "base.html" %}
 
 {% block content %}
@@ -6,8 +6,8 @@
 <h2>Login</h2>
 <form id="login-form">
   <label>
-    Username
-    <input type="text" name="username" required />
+    Email
+    <input type="email" name="email" required />
   </label>
   <label>
     Password
@@ -58,7 +58,10 @@
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const fd = new FormData(form);
+    const fd = new FormData();
+    // OAuth2 wymaga pola 'username', ale wysyłamy email
+    fd.append('username', form.email.value);
+    fd.append('password', form.password.value);
     fd.append('scope', '');
 
     try {
@@ -79,7 +82,7 @@
         setStatusLoginFailed();
       }
     } catch (err) {
-      showMessage('Network error: ' + err, 'error');
+      showMessage('Błąd sieci: ' + err, 'error');
       setStatusLoginFailed();
     }
   });
