@@ -26,12 +26,12 @@
         "defaults": {},
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "id": 2,
       "options": {},
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total[1m]))",
+          "expr": "sum(rate(http_requests_total{job=\"fastapi\"}[1m]))",
           "legendFormat": "requests/sec",
           "refId": "A"
         }
@@ -41,18 +41,63 @@
     },
     {
       "datasource": "Prometheus",
-      "fieldConfig": { "defaults": {}, "overrides": [] },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 3,
+      "options": {},
+      "targets": [
+        {
+          "expr": "sum by(status) (rate(http_requests_total{job=\"fastapi\"}[1m]))",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Requests by Status Code",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { 
+        "defaults": {
+          "unit": "percent"
+        }, 
+        "overrides": [] 
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
       "id": 4,
       "options": {},
       "targets": [
         {
-          "expr": "(sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))) * 100",
-          "legendFormat": "5xx rate %",
+          "expr": "(sum(rate(http_requests_total{job=\"fastapi\",status=\"4xx\"}[5m])) / sum(rate(http_requests_total{job=\"fastapi\"}[5m]))) * 100",
+          "legendFormat": "4xx rate %",
           "refId": "A"
         }
       ],
-      "title": "5xx error rate (%)",
+      "title": "4xx error rate (%)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { 
+        "defaults": {
+          "unit": "s"
+        }, 
+        "overrides": [] 
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 5,
+      "options": {},
+      "targets": [
+        {
+          "expr": "rate(http_request_duration_highr_seconds_sum[5m]) / rate(http_request_duration_highr_seconds_count[5m])",
+          "legendFormat": "avg response time",
+          "refId": "A"
+        }
+      ],
+      "title": "Average Response Time",
       "type": "timeseries"
     }
   ],
