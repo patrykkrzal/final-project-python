@@ -18,3 +18,21 @@ groups:
         annotations:
           summary: "High 5xx error rate"
           description: "5xx errors are more than 5% of total requests over the last 5 minutes."
+
+      - alert: BackendDown
+        expr: up{job="fastapi"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend is down"
+          description: "Prometheus cannot scrape backend metrics for 1 minute."
+
+      - alert: SlowResponseTime
+        expr: rate(http_request_duration_highr_seconds_sum[5m]) / rate(http_request_duration_highr_seconds_count[5m]) > 1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow response time ({{ $value }}s)"
+          description: "Average response time is above 1 second for more than 2 minutes."
